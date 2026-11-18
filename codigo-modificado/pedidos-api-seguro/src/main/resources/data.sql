@@ -13,3 +13,13 @@ INSERT INTO pedidos (id, descripcion, monto, fecha, usuario_id) VALUES
   (1, 'Laptop para laboratorio', 18500.00, '2026-09-01', 1),
   (2, 'Mouse inalambrico', 450.00, '2026-09-15', 1),
   (3, 'Monitor 24 pulgadas', 3200.00, '2026-10-02', 2);
+
+-- ---------------------------------------------------------------------
+-- Refuerzo para el retest: los INSERT anteriores usan IDs explicitos y H2
+-- no avanza el contador IDENTITY. Sin estas lineas, el primer INSERT que
+-- haga la API (POST /api/usuarios o POST /api/pedidos) colisiona con los
+-- IDs 1/2/3 y responde 500. Al reiniciar los contadores, las pruebas de
+-- creacion (PruebaBolaEscrituraTest) son deterministas.
+-- ---------------------------------------------------------------------
+ALTER TABLE usuarios ALTER COLUMN id RESTART WITH 3;
+ALTER TABLE pedidos ALTER COLUMN id RESTART WITH 4;

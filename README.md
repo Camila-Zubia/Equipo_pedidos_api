@@ -29,9 +29,9 @@ Análisis de seguridad de una API REST de pedidos construida con Java 17 y Sprin
 │       ├── src/                    incluye las pruebas de seguridad
 │       └── postman/Coleccion_Validacion_P1.json
 ├── reportes/
-│   ├── reporte_vulnerabilidades.pdf
-│   ├── reporte_correcciones.pdf
-│   └── reporte_auditoria.pdf
+│   ├── reporte_vulnerabilidades.docx
+│   ├── reporte_correcciones.docx
+│   └── reporte_auditoria.docx
 ├── evidencias/
 │   ├── p1-001/ ... p1-007/         capturas de la explotación
 │   └── retest/                     capturas de la verificación
@@ -85,8 +85,6 @@ Se importan desde File, Import y se selecciona el archivo .json. En las variable
 cd codigo-modificado/pedidos-api-seguro
 mvn test
 ```
-
-Desde NetBeans se ejecutan con clic derecho en el proyecto y Test Project. Las pruebas son `PruebaBolaTest`, `PruebaMassAssignmentTest` y `PruebaValidacionTest`.
 
 ---
 
