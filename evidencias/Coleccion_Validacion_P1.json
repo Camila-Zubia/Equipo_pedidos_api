@@ -1,0 +1,519 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+    "name": "P1 - Validacion Seguridad API (pedidos-api)",
+    "description": "Colección de validación post-corrección (retest) para la Práctica 1: Seguridad en APIs (ITSON - Ciberseguridad Aplicada). Verifica mitigaciones de BOLA, BOPLA / Mass Assignment y Validación de datos de entrada (P1-001 a P1-007).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - P1-001: Listar usuarios (sin password)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('No expone el campo password', function () {",
+              "    const usuarios = pm.response.json();",
+              "    pm.expect(usuarios).to.be.an('array');",
+              "    usuarios.forEach(u => {",
+              "        pm.expect(u).to.not.have.property('password');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "description": "Verifica que GET /api/usuarios devuelva UsuarioRespuestaDTO sin exponer contraseñas (P1-001)."
+      }
+    },
+    {
+      "name": "01a - P1-002: Listar pedidos propios (X-User-Id: 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Solo devuelve pedidos de Beto sin password', function () {",
+              "    const pedidos = pm.response.json();",
+              "    pm.expect(pedidos).to.be.an('array');",
+              "    pedidos.forEach(p => {",
+              "        pm.expect(p.nombreUsuario).to.eql('Beto');",
+              "        pm.expect(JSON.stringify(p)).to.not.include('beto12345');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "2",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos"
+          ]
+        },
+        "description": "Verifica filtrado de pedidos por usuario autenticado en GET /api/pedidos (P1-002)."
+      }
+    },
+    {
+      "name": "01b - P1-002: Listar pedidos sin X-User-Id (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 401 Unauthorized sin encabezado', function () {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos"
+          ]
+        },
+        "description": "Verifica que GET /api/pedidos responda 401 si falta X-User-Id (P1-002)."
+      }
+    },
+    {
+      "name": "02a - P1-003: BOLA lectura pedido ajeno (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 403 Forbidden al solicitar pedido ajeno', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos/3",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos",
+            "3"
+          ]
+        },
+        "description": "Usuario 1 (Ana) intenta consultar el pedido 3 perteneciente a Beto -> debe retornar 403 Forbidden (P1-003)."
+      }
+    },
+    {
+      "name": "02b - P1-003: Lectura pedido propio (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 OK en pedido propio', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('No expone password', function () {",
+              "    pm.expect(pm.response.text()).to.not.include('ana12345');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos",
+            "1"
+          ]
+        },
+        "description": "Usuario 1 (Ana) consulta su pedido 1 -> retorna 200 OK con PedidoRespuestaDTO (P1-003)."
+      }
+    },
+    {
+      "name": "03 - P1-004: BOLA lectura usuario ajeno (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 403 Forbidden al consultar perfil de otro usuario', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "2"
+          ]
+        },
+        "description": "Usuario 1 (Ana) intenta leer perfil del usuario 2 (Beto) -> 403 Forbidden (P1-004)."
+      }
+    },
+    {
+      "name": "04a - P1-005: BOLA escritura inyeccion de dueño (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400 Bad Request al enviar campo usuario desconocido', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"descripcion\": \"Pedido inyectado a nombre de Beto\",\n  \"monto\": 99999.00,\n  \"fecha\": \"2026-11-11\",\n  \"usuario\": { \"id\": 2 }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos"
+          ]
+        },
+        "description": "Intenta crear pedido inyectando usuario id 2 y fecha -> rechazado con 400 Bad Request por esquema estricto (P1-005)."
+      }
+    },
+    {
+      "name": "04b - P1-005: Creacion valida de pedido asignado a X-User-Id (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Asignado automaticamente al usuario autenticado (Ana)', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.nombreUsuario).to.eql('Ana');",
+              "    pm.expect(body.fecha).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"descripcion\": \"Teclado mecanico\",\n  \"monto\": 1250.00\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos"
+          ]
+        },
+        "description": "Crea pedido valido; el servidor asigna fecha actual y propietario desde X-User-Id (P1-005)."
+      }
+    },
+    {
+      "name": "05a - P1-006: Mass Assignment rol ADMIN ignorado (201 con USER)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Rol ADMIN ignorado y fijado a USER sin exponer password', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.rol).to.eql('USER');",
+              "    pm.expect(body).to.not.have.property('password');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Eva Atacante\",\n  \"email\": \"eva.retest@itson.mx\",\n  \"password\": \"claveSegura123\",\n  \"rol\": \"ADMIN\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "description": "Envia rol ADMIN en el registro; el DTO neutraliza el rol a USER y omite password en la respuesta (P1-006)."
+      }
+    },
+    {
+      "name": "05b - P1-006: Mass Assignment campo desconocido rechazado (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400 Bad Request ante campo desconocido', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"David Prueba\",\n  \"email\": \"david.retest@itson.mx\",\n  \"password\": \"claveSegura123\",\n  \"esAdministrador\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "description": "Envia propiedad arbitraria esAdministrador -> rechazado con 400 Bad Request por Jackson estricto (P1-006)."
+      }
+    },
+    {
+      "name": "07a - P1-007: Registro usuario con datos invalidos (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400 Bad Request por validacion de email y password', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Carolina\",\n  \"email\": \"correo-invalido\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "description": "Verifica que @Email y @Size rechacen con 400 Bad Request datos invalidos (P1-007)."
+      }
+    },
+    {
+      "name": "07b - P1-007: Creacion pedido con datos invalidos (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400 Bad Request por descripcion vacia y monto negativo', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-User-Id",
+            "value": "1",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"descripcion\": \"\",\n  \"monto\": -500\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/pedidos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pedidos"
+          ]
+        },
+        "description": "Verifica que @NotBlank y @Positive rechacen con 400 Bad Request un pedido invalido (P1-007)."
+      }
+    }
+  ]
+}

@@ -19,11 +19,14 @@ public class UsuarioRegistroDTO {
 
     @NotBlank(message = "El correo electrónico es obligatorio")
     @Email(message = "El correo electrónico no tiene un formato válido")
+    @Size(max = 150, message = "El correo no debe exceder 150 caracteres")
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 8, max = 64, message = "La contraseña debe tener entre 8 y 64 caracteres")
     private String password;
+    
+    private String rol = "USER";
 
     public UsuarioRegistroDTO() {
     }
@@ -50,5 +53,11 @@ public class UsuarioRegistroDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    public String getRol() { return rol; }
+    
+    public void setRol(String rol) { 
+        this.rol = "USER"; 
     }
 }
