@@ -27,8 +27,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> manejarValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> errores.put(error.getField(), error.getDefaultMessage()));
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            if ("NotBlank".equals(error.getCode()) || "NotNull".equals(error.getCode())) {
+                errores.put(error.getField(), error.getDefaultMessage());
+            } else {
+                errores.putIfAbsent(error.getField(), error.getDefaultMessage());
+            }
+        });
         return errores;
     }
 
