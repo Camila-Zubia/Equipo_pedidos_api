@@ -30,8 +30,8 @@ class PruebaMassAssignmentTest {
 
     @Test
     void rolAdminEnJson_seIgnoraYSeAlmacenaUSER() throws Exception {
-        // ✅ SEGURO: el campo "rol" del JSON no existe en UsuarioRegistroDTO, por
-        // lo que el servidor asigna "USER" sin importar lo que envie el cliente.
+        // ✅ SEGURO: UsuarioRegistroDTO descarta el valor de "rol" que envia el
+        // cliente y siempre lo fija en "USER", y el controlador tambien asigna "USER".
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
