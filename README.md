@@ -3,7 +3,7 @@
 Materia: Ciberseguridad Aplicada · Ingeniería en Software · ITSON
 Unidad de Competencia 3 · Práctica 1
 
-Análisis de seguridad de una API REST de pedidos construida con Java 17 y Spring Boot. El repositorio contiene la versión vulnerable, la versión corregida, las pruebas de seguridad automatizadas, los tres reportes y las evidencias capturadas durante la práctica.
+Análisis de seguridad de una API REST de pedidos construida con Java 17 y Spring Boot 3.3. El repositorio contiene la versión vulnerable, la versión corregida, las pruebas de seguridad automatizadas, los tres reportes y las evidencias capturadas durante la práctica.
 
 ---
 
@@ -33,8 +33,11 @@ Análisis de seguridad de una API REST de pedidos construida con Java 17 y Sprin
 │   ├── reporte_correcciones.docx
 │   └── reporte_auditoria.docx
 ├── evidencias/
-│   ├── p1-001/ ... p1-007/         capturas de la explotación
-│   └── retest/                     capturas de la verificación
+│   ├── hallazgos/
+│   │   └── p1-001/ ... p1-007/     capturas de la explotación
+│   └── retest/
+│       ├── p1-001/ ... p1-007/     capturas de la verificación
+│       └── mvn-test.png            salida de las pruebas automatizadas
 └── README.md
 ```
 
@@ -43,7 +46,7 @@ Análisis de seguridad de una API REST de pedidos construida con Java 17 y Sprin
 ## Requisitos
 
 - Java 17 o superior
-- Maven, incluido en Apache NetBeans
+- Maven 3. Apache NetBeans e IntelliJ IDEA lo incluyen, pero para usar los comandos `mvn` desde una terminal debe estar instalado y agregado al PATH, ya que los proyectos no incluyen Maven Wrapper.
 - Postman, versión de escritorio o web
 
 ---
@@ -66,18 +69,18 @@ cd codigo-modificado/pedidos-api-seguro
 mvn spring-boot:run
 ```
 
-Desde NetBeans se abre el proyecto con Open Project, se esperan las dependencias de Maven y se ejecuta con clic derecho y Run.
+Desde NetBeans se abre el proyecto con Open Project, se esperan las dependencias de Maven y se ejecuta con clic derecho y Run. Desde IntelliJ IDEA se abre la carpeta del proyecto y se ejecuta la clase `PedidosApiApplication`.
 
-La API arrancó correctamente cuando en la consola aparecen los mensajes `Started PedidosApiApplication` y `Tomcat started on port 8080`. Para comprobarlo se puede abrir `http://localhost:8080/api/pedidos`, que responde con los tres pedidos iniciales.
+La API arrancó correctamente cuando en la consola aparecen los mensajes `Started PedidosApiApplication` y `Tomcat started on port 8080`. En la versión vulnerable, `http://localhost:8080/api/pedidos` responde con los tres pedidos iniciales. En la versión segura, la misma dirección responde 401 si no se envía el encabezado `X-User-Id`.
 
 La base de datos es H2 en memoria, por lo que los datos se reinician cada vez que se detiene la aplicación. La consola está en `http://localhost:8080/h2-console` con la URL JDBC `jdbc:h2:mem:pedidosdb`, usuario `sa` y contraseña vacía.
 
 ### Colecciones de Postman
 
-Se importan desde File, Import y se selecciona el archivo .json. En las variables de la colección se define `baseUrl` con el valor `http://localhost:8080`.
+Se importan desde File, Import y se selecciona el archivo .json. Ambas colecciones ya incluyen la variable `baseUrl` con el valor `http://localhost:8080`.
 
-- `Coleccion_Explotacion_P1.json` reproduce los ataques sobre la API vulnerable.
-- `Coleccion_Validacion_P1.json` repite los mismos ataques sobre la API segura y verifica que ahora se bloqueen.
+- `Coleccion_Explotacion_P1.json` reproduce sobre la API vulnerable los hallazgos P1-001 a P1-006. El hallazgo P1-007 se reproduce enviando manualmente los cuerpos descritos en su ficha del reporte de vulnerabilidades.
+- `Coleccion_Validacion_P1.json` comprueba sobre la API segura las defensas de BOLA, asignación masiva y validación de entrada. Las verificaciones de los listados de usuarios y de pedidos se realizan con peticiones manuales.
 
 ### Pruebas de seguridad
 
@@ -85,6 +88,8 @@ Se importan desde File, Import y se selecciona el archivo .json. En las variable
 cd codigo-modificado/pedidos-api-seguro
 mvn test
 ```
+
+El resultado esperado es de 13 pruebas sin fallos ni errores, distribuidas en `PruebaBolaTest`, `PruebaBolaEscrituraTest`, `PruebaMassAssignmentTest` y `PruebaValidacionTest`.
 
 ---
 
@@ -102,14 +107,14 @@ mvn test
 
 Total de hallazgos: 7. Críticos: 4. Altos: 3. Medios: 0. Bajos: 0.
 
-El detalle de cada hallazgo, con su descripción, evidencia, impacto y recomendación, está en `reportes/reporte_vulnerabilidades.docx`. La correspondencia entre cada hallazgo y su corrección está en `reportes/reporte_correcciones.docx`.
+El detalle de cada hallazgo, con su descripción, evidencia, impacto y recomendación, está en `reportes/reporte_vulnerabilidades.docx`. La correspondencia entre cada hallazgo y su corrección está en `reportes/reporte_correcciones.docx`, y la consolidación de la auditoría en `reportes/reporte_auditoria.docx`.
 
 ---
 
 ## Controles aplicados en la versión segura
 
-- Verificación de propiedad del recurso en el servidor, que responde 403 cuando el objeto pertenece a otro usuario y 401 cuando falta el encabezado `X-User-Id`.
-- DTOs de entrada que solo aceptan los campos permitidos, por lo que el rol y el dueño del pedido los fija el servidor.
+- Verificación de propiedad del recurso en el servidor, que responde 403 cuando el objeto pertenece a otro usuario, 401 cuando falta el encabezado `X-User-Id` y 404 cuando el recurso no existe. El listado de pedidos se filtra por el usuario indicado en el encabezado.
+- DTOs de entrada que limitan los campos que el cliente puede enviar. El dueño del pedido se toma del encabezado `X-User-Id` y el rol se fija siempre en USER, sin importar lo que envíe el cliente.
 - DTOs de salida y `@JsonIgnore` en el campo `password`, para que la contraseña no aparezca en ninguna respuesta.
 - Esquema estricto de Jackson con `fail-on-unknown-properties=true`, que rechaza con 400 cualquier campo desconocido.
 - Validación con `@Valid` y anotaciones por campo, con manejo centralizado de errores en `GlobalExceptionHandler`.
