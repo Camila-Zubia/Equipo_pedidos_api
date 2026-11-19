@@ -7,8 +7,9 @@ import jakarta.validation.constraints.Size;
 /**
  * DTO de entrada para el registro de usuarios (version SEGURA).
  *
- * ✅ SEGURO: no incluye los campos "id" ni "rol", de modo que un cliente no
- * puede asignarse identificadores ni privilegios (mitiga Mass Assignment,
+ * ✅ SEGURO: no incluye el campo "id", y el campo "rol" descarta cualquier
+ * valor recibido y siempre se fija en USER, de modo que un cliente no puede
+ * asignarse identificadores ni privilegios (mitiga Mass Assignment,
  * API3:2023). Los campos se validan con Bean Validation (@Valid).
  */
 public class UsuarioRegistroDTO {
